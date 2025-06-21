@@ -1,6 +1,6 @@
 name: Web API Deploy Pipeline
 on:
-  push
+  push:
     paths:
       - '.github/workflows/**'
       - 'api-demo/**'
