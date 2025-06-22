@@ -74,7 +74,7 @@ jobs:
         run: |
           echo "API_IMAGE_URI=$(cat artifacts/api-image-uri.txt)">>$GITHUB_ENV
 
-      - name: Fill in the new image URI in the amazon ECS task ECS task definition
+      - name: Fill in the new image URI in the amazon ECS task definition
         id: render-task-def
         uses: aws-actions/amazon-ecs-render-task-definition@v1
         with:
