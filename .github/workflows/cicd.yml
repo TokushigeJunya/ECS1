@@ -10,7 +10,7 @@ env:
   ECS_CLUSTER: Tokushige1
   ECS_SERVICE: Tokushige1-service1
   ECR_REPOSITORY: tokushige1
-  ECS_TASK_DEFINITION_API: api-demo/.aws/task-def-api.json
+  ECS_TASK_DEFINITION: api-demo/.aws/task-def.json
 
 permissions:
   id-token: write
@@ -28,6 +28,9 @@ jobs:
       - name: Run Tests and Build an Image
         run: docker image build -t temp_api_image:latest .
 
+      - name: Build Apache image
+        run: docker build -f Dockerfile.apache -t temp_apache_image:latest .
+
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -38,19 +41,29 @@ jobs:
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
       
-      - name: Push the image to Amazon ECR
+      - name: Push the api image to Amazon ECR
         env:
           ECR_REGISTRY: ${{steps.login-ecr.outputs.registry}}
         run: |
-          docker image tag temp_api_image:latest $ECR_REGISTRY/$ECR_REPOSITORY:${{github.sha}}
-          docker image push $ECR_REGISTRY/$ECR_REPOSITORY:${{github.sha}}
-          echo $ECR_REGISTRY/$ECR_REPOSITORY:${{github.sha}} > api-image-uri.txt
+          docker image tag temp_api_image:latest $ECR_REGISTRY/$ECR_REPOSITORY:api-${{github.sha}}
+          docker image push $ECR_REGISTRY/$ECR_REPOSITORY:api-${{github.sha}}
+          echo $ECR_REGISTRY/$ECR_REPOSITORY:api-${{github.sha}} > api-image-uri.txt
+        
+      - name: Push the apache image to Amazon ECR
+        env:
+          ECR_REGISTRY: ${{steps.login-ecr.outputs.registry}}
+        run: |
+          docker image tag temp_apache_image:latest $ECR_REGISTRY/$ECR_REPOSITORY:apache-${{github.sha}}
+          docker image push $ECR_REGISTRY/$ECR_REPOSITORY:apache-${{github.sha}}
+          echo $ECR_REGISTRY/$ECR_REPOSITORY:apache-${{github.sha}} > apache-image-uri.txt
       
-      - name: Upload the image uri file as an artifact
+      - name: Upload the image uri files as an artifact
         uses: actions/upload-artifact@v4
         with:
-          name: api-image-uri
-          path: api-demo/api-image-uri.txt
+          name: image-uris
+          path: |
+            api-demo/api-image-uri.txt
+            api-demo/apache-image-uri.txt
 
   deploy:
     runs-on: ubuntu-latest
@@ -67,25 +80,34 @@ jobs:
       - name: Download the artifact
         uses: actions/download-artifact@v4
         with:
-          name: api-image-uri
+          name: image-uris
           path: artifacts
 
       - name: Define the image uri
         run: |
           echo "API_IMAGE_URI=$(cat artifacts/api-image-uri.txt)">>$GITHUB_ENV
+          echo "APACHE_IMAGE_URI=$(cat artifacts/apache-image-uri.txt)">>$GITHUB_ENV
 
-      - name: Fill in the new image URI in the amazon ECS task definition
-        id: render-task-def
+      - name: Render API container
+        id: render-api
         uses: aws-actions/amazon-ecs-render-task-definition@v1
         with:
-          task-definition: ${{env.ECS_TASK_DEFINITION_API}}
+          task-definition: ${{ env.ECS_TASK_DEFINITION }}
           container-name: api
-          image: ${{env.API_IMAGE_URI}}
-      
+          image: ${{ env.API_IMAGE_URI }}
+
+      - name: Render Apache container
+        id: render-apache
+        uses: aws-actions/amazon-ecs-render-task-definition@v1
+        with:
+          task-definition: ${{ steps.render-api.outputs.task-definition }}
+          container-name: apache
+          image: ${{ env.APACHE_IMAGE_URI }}
+
       - name: Deploy ECS task
         uses: aws-actions/amazon-ecs-deploy-task-definition@v1
         with:
-          task-definition: ${{steps.render-task-def.outputs.task-definition}}
+          task-definition: ${{steps.render-apache.outputs.task-definition}}
           service: ${{env.ECS_SERVICE}}
           cluster: ${{env.ECS_CLUSTER}}
           wait-for-service-stability: true

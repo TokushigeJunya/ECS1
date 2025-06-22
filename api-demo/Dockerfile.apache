@@ -1,0 +1,16 @@
+FROM ubuntu:22.04
+
+# パッケージの更新と Apache のインストール
+RUN apt-get update && \
+    apt-get install -y apache2
+
+# プロキシ関連モジュールを有効化（必要に応じて）
+RUN a2enmod proxy proxy_http
+
+# カスタム設定ファイルのコピー
+COPY ./proxy.conf /etc/apache2/sites-available/000-default.conf
+
+# フォアグラウンドで実行
+CMD ["apachectl", "-D", "FOREGROUND"]
+
+EXPOSE 80
