@@ -8,7 +8,7 @@ on:
 env:
   AWS_REGION: us-east-1
   ECS_CLUSTER: Tokushige1
-  ECS_SERVICE: Tokushige1-service1
+  ECS_SERVICE: Tokushige1-service2
   ECR_REPOSITORY: tokushige1
   ECS_TASK_DEFINITION: api-demo/.aws/task-def.json
 
