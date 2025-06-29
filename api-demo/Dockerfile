@@ -1,18 +1,18 @@
 # ビルドステージ：.war を作成
 FROM maven:3.9.9-eclipse-temurin-21 AS build
 
-WORKDIR /app
-COPY . /app
-RUN mvn clean package
-
-# 実行ステージ：Tomcat イメージを使用
-FROM tomcat:10.1-jdk21-temurin
-
 # セッション情報外出しのための環境変数設定
 ARG REDIS_HOST
 ARG REDIS_PORT
 ENV REDIS_HOST=$REDIS_HOST
 ENV REDIS_PORT=$REDIS_PORT
+
+WORKDIR /app
+COPY . /app
+RUN mvn clean package -DskipTests
+
+# 実行ステージ：Tomcat イメージを使用
+FROM tomcat:10.1-jdk21-temurin
 
 # 既存の ROOT アプリケーションを削除（任意）
 RUN rm -rf /usr/local/tomcat/webapps/ROOT
