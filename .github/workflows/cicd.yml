@@ -96,8 +96,8 @@ jobs:
           container-name: api
           image: ${{ env.API_IMAGE_URI }}
           environment-variables: |
-          REDIS_HOST=${{ secrets.REDIS_HOST }}
-          REDIS_PORT=${{ secrets.REDIS_PORT }}
+            REDIS_HOST=${{ secrets.REDIS_HOST }}
+            REDIS_PORT=${{ secrets.REDIS_PORT }}
 
       - name: Render Apache container
         id: render-apache
