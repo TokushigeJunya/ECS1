@@ -1,12 +1,6 @@
 # ビルドステージ：.war を作成
 FROM maven:3.9.9-eclipse-temurin-21 AS build
 
-# セッション情報外出しのための環境変数設定
-ARG REDIS_HOST
-ARG REDIS_PORT
-ENV REDIS_HOST=$REDIS_HOST
-ENV REDIS_PORT=$REDIS_PORT
-
 WORKDIR /app
 COPY . /app
 RUN mvn clean package -DskipTests
