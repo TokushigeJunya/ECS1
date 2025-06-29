@@ -3,7 +3,7 @@ FROM maven:3.9.9-eclipse-temurin-21 AS build
 
 WORKDIR /app
 COPY . /app
-RUN mvn clean package -DskipTests
+RUN mvn clean package
 
 # 実行ステージ：Tomcat イメージを使用
 FROM tomcat:10.1-jdk21-temurin
