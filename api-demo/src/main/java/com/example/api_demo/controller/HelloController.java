@@ -1,25 +1,17 @@
-package com.example.api_demo;
+package com.example.api_demo.controller;
 
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
-import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.test.web.servlet.MockMvc;
+import jakarta.servlet.http.HttpSession;
 
-import com.example.api_demo.controller.HelloController;
-
-@WebMvcTest(HelloController.class)
-class HelloControllerTest {
-
-    @Autowired
-    private MockMvc mockMvc;
-
-    @Test
-    void helloEndpointReturnsGreeting() throws Exception {
-        mockMvc.perform(get("/api/hello"))
-               .andExpect(status().isOk())
-               .andExpect(content().string("Hello"));
+@RestController
+@RequestMapping("/api/hello")
+public class HelloController {
+    @GetMapping
+    String get(HttpSession session) {
+    	session.setAttribute("username", "junya");
+        return "Hello";
     }
 }
